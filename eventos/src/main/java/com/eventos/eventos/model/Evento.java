@@ -42,6 +42,6 @@ public class Evento {
     public String getCategoria() { return categoria; }
     public void setCategoria(String categoria) { this.categoria = categoria; }
 
-    public Integer getNumeroVagas() { return vagas; }
-    public void setNumeroVagas(Integer numeroVagas) { this.vagas = numeroVagas; }
+    public Integer getVagas() { return vagas; }
+    public void setVagas(Integer numeroVagas) { this.vagas = numeroVagas; }
 }
