@@ -18,7 +18,7 @@ public class Evento {
     private LocalTime hora;
     private String local;
     private String categoria;
-    private Integer numeroVagas;
+    private Integer vagas;
 
     
     public Long getId() { return id; }
@@ -42,6 +42,6 @@ public class Evento {
     public String getCategoria() { return categoria; }
     public void setCategoria(String categoria) { this.categoria = categoria; }
 
-    public Integer getNumeroVagas() { return numeroVagas; }
-    public void setNumeroVagas(Integer numeroVagas) { this.numeroVagas = numeroVagas; }
+    public Integer getNumeroVagas() { return vagas; }
+    public void setNumeroVagas(Integer numeroVagas) { this.vagas = numeroVagas; }
 }
