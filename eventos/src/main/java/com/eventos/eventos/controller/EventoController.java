@@ -14,7 +14,7 @@ public class EventoController {
     @Autowired
     private EventoRepository eventoRepository;
 
-    @PostMapping
+    @PostMapping ("/criar")
     public Evento criarEvento(@RequestBody Evento evento) {
         return eventoRepository.save(evento);
     }
