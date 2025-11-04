@@ -19,7 +19,8 @@ public class Inscricao {
 
     private LocalDateTime dataInscricao = LocalDateTime.now();
 
-    public Inscricao() {}
+    public Inscricao() {
+    }
 
     public Inscricao(Long usuarioId, Evento evento) {
         this.usuarioId = usuarioId;
@@ -27,11 +28,31 @@ public class Inscricao {
     }
 
     // Getters e Setters
-    public Long getId() { return id; }
-    public Long getUsuarioId() { return usuarioId; }
-    public void setUsuarioId(Long usuarioId) { this.usuarioId = usuarioId; }
-    public Evento getEvento() { return evento; }
-    public void setEvento(Evento evento) { this.evento = evento; }
-    public LocalDateTime getDataInscricao() { return dataInscricao; }
-    public void setDataInscricao(LocalDateTime dataInscricao) { this.dataInscricao = dataInscricao; }
+    public Long getId() {
+        return id;
+    }
+
+    public Long getUsuarioId() {
+        return usuarioId;
+    }
+
+    public void setUsuarioId(Long usuarioId) {
+        this.usuarioId = usuarioId;
+    }
+
+    public Evento getEvento() {
+        return evento;
+    }
+
+    public void setEvento(Evento evento) {
+        this.evento = evento;
+    }
+
+    public LocalDateTime getDataInscricao() {
+        return dataInscricao;
+    }
+
+    public void setDataInscricao(LocalDateTime dataInscricao) {
+        this.dataInscricao = dataInscricao;
+    }
 }
