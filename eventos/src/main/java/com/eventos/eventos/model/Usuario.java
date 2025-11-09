@@ -13,7 +13,6 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // A tela de login pede "Nome do usuário / E-mail"
     @NotBlank
     @Size(max = 50)
     @Column(unique = true)
@@ -26,11 +25,11 @@ public class Usuario {
     private String email;
 
     @NotBlank
-    @Size(max = 120) // Senhas criptografadas são longas
+    @Size(max = 120)
     private String senha;
 
-    // Construtores, Getters e Setters
-    public Usuario() {}
+    public Usuario() {
+    }
 
     public Usuario(String nomeUsuario, String email, String senha) {
         this.nomeUsuario = nomeUsuario;
@@ -38,9 +37,6 @@ public class Usuario {
         this.senha = senha;
     }
 
-    // Gere os getters e setters para todos os campos (id, nomeUsuario, email, senha)
-    // ... (Clique com o botão direito na sua IDE > Generate > Getters and Setters)
-    
     public Long getId() {
         return id;
     }

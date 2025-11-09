@@ -19,11 +19,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // O "username" aqui pode ser o 'nomeUsuario' OU o 'email'
+
         Usuario usuario = usuarioRepository.findByNomeUsuarioOrEmail(username, username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado com: " + username));
 
-        // Converte o nosso 'Usuario' (do model) para o 'User' (do Spring Security)
-        return new User(usuario.getNomeUsuario(), usuario.getSenha(), new ArrayList<>()); // new ArrayList<>() -> lista de permissões (roles)
+        return new User(usuario.getNomeUsuario(), usuario.getSenha(), new ArrayList<>());
     }
 }

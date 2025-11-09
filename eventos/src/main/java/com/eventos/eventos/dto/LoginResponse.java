@@ -1,6 +1,5 @@
 package com.eventos.eventos.dto;
 
-// Esta classe representa o JSON que o back-end enviará de volta
 public class LoginResponse {
     private String token;
     private String tipo = "Bearer";
@@ -15,8 +14,6 @@ public class LoginResponse {
         this.email = email;
     }
 
-    // Gere Getters e Setters
-    // ...
     public String getToken() {
         return token;
     }
@@ -25,5 +22,4 @@ public class LoginResponse {
         this.token = token;
     }
 
-    // ... (getters e setters para os outros campos)
 }
