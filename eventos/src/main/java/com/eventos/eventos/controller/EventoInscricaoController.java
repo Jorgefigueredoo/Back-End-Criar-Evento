@@ -2,14 +2,20 @@ package com.eventos.eventos.controller;
 
 import com.eventos.eventos.model.Evento;
 import com.eventos.eventos.model.Inscricao;
+import com.eventos.eventos.model.Usuario;
 import com.eventos.eventos.repository.EventoRepository;
 import com.eventos.eventos.repository.InscricaoRepository;
+import com.eventos.eventos.repository.UsuarioRepository;
+import org.springframework.security.core.userdetails.UserDetails;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -22,36 +28,43 @@ public class EventoInscricaoController {
     @Autowired
     private InscricaoRepository inscricaoRepository;
 
-    // POST /api/eventos/{id}/inscricoes
-    @PostMapping("/{id}/inscricoes")
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @PostMapping("/{id}/inscrever")
     public ResponseEntity<?> inscreverUsuario(
             @PathVariable Long id,
-            @RequestBody Map<String, Object> body
-    ) {
-        Long usuarioId = Long.valueOf(body.get("usuarioId").toString());
+            @AuthenticationPrincipal UserDetails userDetails) {
 
-        Evento evento = eventoRepository.findById(id).orElse(null);
+        String login = userDetails.getUsername();
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByNomeUsuarioOrEmail(login, login);
+
+        if (usuarioOpt.isEmpty()) {
+            return ResponseEntity.status(401).body(Map.of("erro", "USUARIO_NAO_ENCONTRADO_NO_TOKEN"));
+        }
+
+        Usuario usuario = usuarioOpt.get();
+        Long usuarioId = usuario.getId();
+
+        Evento evento = eventoRepository.findById(id)
+                .orElse(null);
+
         if (evento == null) {
             return ResponseEntity.badRequest().body(Map.of("erro", "EVENTO_NAO_ENCONTRADO"));
         }
 
-        // Verifica se já está inscrito
-        boolean jaInscrito = inscricaoRepository.findByEvento_IdAndUsuarioId(id, usuarioId).isPresent();
+        boolean jaInscrito = inscricaoRepository.findByEventoIdAndUsuarioId(id, usuarioId).isPresent();
         if (jaInscrito) {
             return ResponseEntity.badRequest().body(Map.of("erro", "JA_INSCRITO"));
         }
 
-        // Verifica vagas
-        int totalInscritos = inscricaoRepository.countByEvento_Id(id);
-        if (evento.getVagas() != null && totalInscritos >= evento.getVagas()) {
+        if (evento.getVagas() != null && evento.getVagas() <= 0) {
             return ResponseEntity.badRequest().body(Map.of("erro", "VAGAS_ESGOTADAS"));
         }
 
-        // Salva inscrição
-        Inscricao nova = new Inscricao(usuarioId, evento);
+        Inscricao nova = new Inscricao(usuario, evento);
         inscricaoRepository.save(nova);
 
-        // Atualiza contagem de vagas disponíveis, se quiser
         if (evento.getVagas() != null) {
             evento.setVagas(evento.getVagas() - 1);
             eventoRepository.save(evento);
@@ -59,25 +72,34 @@ public class EventoInscricaoController {
 
         return ResponseEntity.ok(Map.of(
                 "mensagem", "Inscrição realizada com sucesso!",
-                "eventoId", id
-        ));
+                "eventoId", id));
     }
 
-    // GET /api/eventos/{id}/inscricoes/{usuarioId}/status
-    @GetMapping("/{id}/inscricoes/{usuarioId}/status")
+    @GetMapping("/{id}/status")
     public ResponseEntity<Map<String, Object>> verificarStatusInscricao(
             @PathVariable Long id,
-            @PathVariable Long usuarioId
-    ) {
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        String login = userDetails.getUsername();
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByNomeUsuarioOrEmail(login, login);
+
+        if (usuarioOpt.isEmpty()) {
+            return ResponseEntity.status(401).body(Map.of("erro", "USUARIO_NAO_ENCONTRADO_NO_TOKEN"));
+        }
+
+        Long usuarioId = usuarioOpt.get().getId();
+
         Map<String, Object> status = new HashMap<>();
 
-        boolean jaInscrito = inscricaoRepository.findByEvento_IdAndUsuarioId(id, usuarioId).isPresent();
+        boolean jaInscrito = inscricaoRepository.findByEventoIdAndUsuarioId(id, usuarioId).isPresent();
         Evento evento = eventoRepository.findById(id).orElse(null);
 
         status.put("jaInscrito", jaInscrito);
-        status.put("esgotado", evento != null && evento.getVagas() != null &&
-                inscricaoRepository.countByEvento_Id(id) >= evento.getVagas());
-        status.put("prazoExpirado", false); // pode implementar lógica de prazo aqui
+
+        boolean esgotado = evento != null && evento.getVagas() != null &&
+                evento.getVagas() <= 0;
+        status.put("esgotado", esgotado);
+        status.put("prazoExpirado", false);
 
         return ResponseEntity.ok(status);
     }

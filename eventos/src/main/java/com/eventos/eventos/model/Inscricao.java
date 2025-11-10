@@ -11,10 +11,16 @@ public class Inscricao {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long usuarioId;
+    // --- MUDANÇA AQUI ---
+    // Em vez de 'private Long usuarioId;'
+    // Nós ligamos a entidade Usuario diretamente.
+    @ManyToOne
+    @JoinColumn(name = "usuario_id", referencedColumnName = "id")
+    private Usuario usuario;
+    // ---------------------
 
     @ManyToOne
-    @JoinColumn(name = "evento_id")
+    @JoinColumn(name = "evento_id", referencedColumnName = "id")
     private Evento evento;
 
     private LocalDateTime dataInscricao = LocalDateTime.now();
@@ -22,8 +28,9 @@ public class Inscricao {
     public Inscricao() {
     }
 
-    public Inscricao(Long usuarioId, Evento evento) {
-        this.usuarioId = usuarioId;
+    // Construtor atualizado para receber o Objeto Usuario
+    public Inscricao(Usuario usuario, Evento evento) {
+        this.usuario = usuario;
         this.evento = evento;
     }
 
@@ -32,13 +39,15 @@ public class Inscricao {
         return id;
     }
 
-    public Long getUsuarioId() {
-        return usuarioId;
+    // --- GETTERS E SETTERS ATUALIZADOS ---
+    public Usuario getUsuario() {
+        return usuario;
     }
 
-    public void setUsuarioId(Long usuarioId) {
-        this.usuarioId = usuarioId;
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
     }
+    // ------------------------------------
 
     public Evento getEvento() {
         return evento;
