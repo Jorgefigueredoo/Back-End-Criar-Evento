@@ -65,11 +65,15 @@ public class SecurityConfig {
                 .authorizeHttpRequests()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/eventos/**").permitAll()
+
+                // --- ADICIONADO PARA SER MAIS ESPECÍFICO ---
+                .requestMatchers(HttpMethod.GET, "/api/perfis/buscar").permitAll()
+
+                // --- Sua linha original (MANTENHA) ---
                 .requestMatchers(HttpMethod.GET, "/api/perfis/**").permitAll()
-                
-                // --- Esta é a linha corrigida ---
-                .requestMatchers(HttpMethod.GET, "/fotos/**").permitAll() 
-                
+
+                .requestMatchers(HttpMethod.GET, "/fotos/**").permitAll()
+
                 .anyRequest().authenticated()
                 .and()
                 .sessionManagement()

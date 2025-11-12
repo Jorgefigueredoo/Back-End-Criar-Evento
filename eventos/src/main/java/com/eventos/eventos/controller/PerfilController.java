@@ -3,11 +3,11 @@ package com.eventos.eventos.controller;
 import com.eventos.eventos.model.Perfil;
 import com.eventos.eventos.model.Usuario;
 import com.eventos.eventos.dto.PerfilUpdateDto;
+import com.eventos.eventos.dto.ResultadoBuscaDTO; 
 import com.eventos.eventos.repository.PerfilRepository;
 import com.eventos.eventos.repository.UsuarioRepository;
 import com.eventos.eventos.service.FileStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,6 +16,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.List;
+import java.util.Collections;
+import java.util.stream.Collectors;
+
 
 @RestController
 @RequestMapping("/api/perfis")
@@ -112,14 +116,33 @@ public class PerfilController {
     }
 
     @GetMapping("/buscar")
-    public ResponseEntity<?> buscarPerfilPorNome(@RequestParam("nome") String nome) {
-        Optional<Perfil> perfilOpt = perfilRepository.findFirstByNomeCompletoContainingIgnoreCase(nome);
+    public ResponseEntity<List<ResultadoBuscaDTO>> buscarPerfis(
+            @RequestParam("q") String query
+    ) {
+        
+        List<Perfil> perfisEncontrados = perfilRepository.searchByNomeOuHabilidades(query);
 
-        if (perfilOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("erro", "Usuário não encontrado."));
+        if (perfisEncontrados.isEmpty()) {
+            return ResponseEntity.ok(Collections.emptyList());
         }
 
-        return ResponseEntity.ok(perfilOpt.get());
+        List<ResultadoBuscaDTO> resultados = perfisEncontrados.stream()
+            .map(perfil -> {
+                
+                String titulo = perfil.getTitulo();
+                String descricao = (titulo != null && !titulo.isEmpty()) ? titulo : "Colaborador";
+
+                String urlPerfil = "/perfil.html?usuarioId=" + perfil.getUsuario().getId();
+
+                return new ResultadoBuscaDTO(
+                    perfil.getNomeCompleto(),
+                    descricao,
+                    urlPerfil
+                );
+            })
+            .collect(Collectors.toList());
+
+        return ResponseEntity.ok(resultados);
     }
 
     private Usuario buscarUsuarioLogado(UserDetails userDetails) {
