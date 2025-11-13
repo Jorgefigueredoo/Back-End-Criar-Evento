@@ -2,10 +2,12 @@ package com.eventos.eventos.controller;
 
 import com.eventos.eventos.model.Perfil;
 import com.eventos.eventos.model.Usuario;
+import com.eventos.eventos.model.Evento; // Importação necessária
 import com.eventos.eventos.dto.PerfilUpdateDto;
-import com.eventos.eventos.dto.ResultadoBuscaDTO; 
+import com.eventos.eventos.dto.ResultadoBuscaDTO;
 import com.eventos.eventos.repository.PerfilRepository;
 import com.eventos.eventos.repository.UsuarioRepository;
+import com.eventos.eventos.repository.EventoRepository; // Importação necessária
 import com.eventos.eventos.service.FileStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +21,7 @@ import java.util.Optional;
 import java.util.List;
 import java.util.Collections;
 import java.util.stream.Collectors;
-
+import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/api/perfis")
@@ -34,6 +36,9 @@ public class PerfilController {
 
     @Autowired
     private FileStorageService fileStorageService;
+
+    @Autowired
+    private EventoRepository eventoRepository;
 
     @GetMapping("/me")
     public ResponseEntity<?> getMeuPerfil(@AuthenticationPrincipal UserDetails userDetails) {
@@ -53,8 +58,7 @@ public class PerfilController {
     @PutMapping("/me")
     public ResponseEntity<?> updateMeuPerfil(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody PerfilUpdateDto perfilUpdateDto
-    ) {
+            @RequestBody PerfilUpdateDto perfilUpdateDto) {
         Usuario usuario = buscarUsuarioLogado(userDetails);
         if (usuario == null) {
             return ResponseEntity.status(401).body(Map.of("erro", "Usuário não autenticado"));
@@ -78,8 +82,7 @@ public class PerfilController {
     @PostMapping("/foto")
     public ResponseEntity<?> uploadFotoPerfil(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestParam("file") MultipartFile file
-    ) {
+            @RequestParam("file") MultipartFile file) {
         Usuario usuario = buscarUsuarioLogado(userDetails);
         if (usuario == null) {
             return ResponseEntity.status(401).body(Map.of("erro", "Usuário não autenticado"));
@@ -92,13 +95,10 @@ public class PerfilController {
 
         try {
             String novaUrl = fileStorageService.salvarArquivo(file);
-
             Perfil perfil = perfilOpt.get();
             perfil.setFotoPerfilUrl(novaUrl);
             perfilRepository.save(perfil);
-
             return ResponseEntity.ok(Map.of("novaUrl", novaUrl));
-
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("erro", "Falha ao salvar a foto: " + e.getMessage()));
         }
@@ -116,33 +116,49 @@ public class PerfilController {
     }
 
     @GetMapping("/buscar")
-    public ResponseEntity<List<ResultadoBuscaDTO>> buscarPerfis(
-            @RequestParam("q") String query
-    ) {
-        
+    public ResponseEntity<List<ResultadoBuscaDTO>> buscarTudo(
+            @RequestParam("q") String query) {
+
         List<Perfil> perfisEncontrados = perfilRepository.searchByNomeOuHabilidades(query);
 
-        if (perfisEncontrados.isEmpty()) {
+        List<ResultadoBuscaDTO> resultadosPerfis = perfisEncontrados.stream()
+                .map(perfil -> {
+                    String titulo = perfil.getTitulo();
+                    String descricao = (titulo != null && !titulo.isEmpty()) ? titulo : "Colaborador";
+                    String urlPerfil = "/perfil.html?usuarioId=" + perfil.getUsuario().getId();
+
+                    return new ResultadoBuscaDTO(
+                            perfil.getNomeCompleto(),
+                            descricao,
+                            urlPerfil);
+                })
+                .collect(Collectors.toList());
+
+        List<Evento> eventosEncontrados = eventoRepository
+                .findByNomeContainingIgnoreCaseOrDescricaoContainingIgnoreCase(query, query);
+
+        List<ResultadoBuscaDTO> resultadosEventos = eventosEncontrados.stream()
+                .map(evento -> {
+                    String descricao = "Evento";
+
+                    String urlEvento = "/detalhes-evento.html?id=" + evento.getId();
+
+                    return new ResultadoBuscaDTO(
+                            evento.getNome(),
+                            descricao,
+                            urlEvento);
+                })
+                .collect(Collectors.toList());
+
+        List<ResultadoBuscaDTO> resultadosFinais = new ArrayList<>();
+        resultadosFinais.addAll(resultadosPerfis);
+        resultadosFinais.addAll(resultadosEventos);
+
+        if (resultadosFinais.isEmpty()) {
             return ResponseEntity.ok(Collections.emptyList());
         }
 
-        List<ResultadoBuscaDTO> resultados = perfisEncontrados.stream()
-            .map(perfil -> {
-                
-                String titulo = perfil.getTitulo();
-                String descricao = (titulo != null && !titulo.isEmpty()) ? titulo : "Colaborador";
-
-                String urlPerfil = "/perfil.html?usuarioId=" + perfil.getUsuario().getId();
-
-                return new ResultadoBuscaDTO(
-                    perfil.getNomeCompleto(),
-                    descricao,
-                    urlPerfil
-                );
-            })
-            .collect(Collectors.toList());
-
-        return ResponseEntity.ok(resultados);
+        return ResponseEntity.ok(resultadosFinais);
     }
 
     private Usuario buscarUsuarioLogado(UserDetails userDetails) {

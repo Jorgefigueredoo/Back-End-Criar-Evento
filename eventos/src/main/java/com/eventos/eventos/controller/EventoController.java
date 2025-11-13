@@ -71,6 +71,8 @@ public class EventoController {
         List<Evento> meusEventos = eventoRepository.findByCriadorId(usuario.getId());
         return ResponseEntity.ok(meusEventos);
     }
+
+    
     
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deletarEvento(

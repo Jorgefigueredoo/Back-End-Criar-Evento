@@ -14,10 +14,10 @@ public class FileStorageService {
 
     public FileStorageService() {
         try {
-            // Cria o diretório se ele não existir
+            
             Files.createDirectories(rootLocation);
         } catch (Exception e) {
-            // Se houver erro de permissão, o programa para e avisa.
+            
             throw new RuntimeException("Não foi possível criar o diretório de upload. Verifique as permissões de escrita.", e);
         }
     }
